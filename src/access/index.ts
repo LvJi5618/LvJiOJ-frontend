@@ -9,7 +9,7 @@ router.beforeEach(async (to, from, next) => {
   const user = store.state.user;
   let currentUser = user.loginUser;
   console.log("登录用户信息", currentUser);
-  // 如果从未登录过,第一次登录,就自动登录
+  // 先尝试获取用户登录信息
   if (!currentUser || !currentUser.userRole) {
     await store.dispatch("user/getLoginUser");
   }
