@@ -6,10 +6,11 @@
       :data="dataList"
       :pagination="{
         showTotal: true,
-        current: requestParams.pageNum,
-        pageSize: requestParams.pageSize,
+        current: searchParams.current,
+        pageSize: searchParams.pageSize,
         total,
       }"
+      @page-change="onPageChange"
     >
       <template #optional="{ record }">
         <a-space>
@@ -23,40 +24,8 @@
 <script setup lang="ts">
 import { Message } from "@arco-design/web-vue";
 import { Question, QuestionControllerService } from "../../../generated";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watchEffect } from "vue";
 import { useRouter } from "vue-router";
-
-const show = ref(true);
-const tableRef = ref();
-const dataList = ref([]);
-const total = ref(0);
-/**
- * 请求参数
- */
-const requestParams = ref({
-  pageSize: 10,
-  pageNum: 1,
-});
-/**
- * 向后端"listQuestionVoByPage"接口发送请求
- */
-const loadData = async () => {
-  const res = await QuestionControllerService.listQuestionByPageUsingPost(
-    requestParams.value
-  );
-  if (res.code === 0) {
-    dataList.value = res.data.records;
-    total.value = res.data.total;
-  } else {
-    Message.error("加载题目列表失败," + res.message);
-  }
-};
-/**
- * 页面加载时,请求后端数据
- */
-onMounted(() => {
-  loadData();
-});
 
 const columns = [
   {
@@ -108,6 +77,39 @@ const columns = [
     slotName: "optional",
   },
 ];
+
+const show = ref(true);
+const tableRef = ref();
+const dataList = ref([]);
+const total = ref(0);
+/**
+ * 请求参数
+ */
+const searchParams = ref({
+  pageSize: 1,
+  current: 1,
+});
+/**
+ * 向后端"listQuestionVoByPage"接口发送请求
+ */
+const loadData = async () => {
+  const res = await QuestionControllerService.listQuestionByPageUsingPost(
+    searchParams.value
+  );
+  if (res.code === 0) {
+    dataList.value = res.data.records;
+    total.value = res.data.total;
+  } else {
+    Message.error("加载题目列表失败," + res.message);
+  }
+};
+/**
+ * 页面加载时,请求后端数据
+ */
+onMounted(() => {
+  loadData();
+});
+
 /**
  * 更新题目操作
  */
@@ -134,4 +136,19 @@ const doDelete = async (question: Question) => {
     Message.error("删除失败," + res.data);
   }
 };
+/**
+ * 分页事件
+ */
+const onPageChange = (page: number) => {
+  searchParams.value = {
+    ...searchParams.value,
+    current: page,
+  };
+};
+/**
+ * 监听 searchParams 变量,当变量改变时触发页面的重新加载
+ */
+watchEffect(() => {
+  loadData();
+});
 </script>

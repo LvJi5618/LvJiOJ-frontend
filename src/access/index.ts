@@ -18,7 +18,11 @@ router.beforeEach(async (to, from, next) => {
   const needAccess = (to?.meta?.access as string) ?? ACCESS_ENUM.NOT_LOGIN;
   if (needAccess !== ACCESS_ENUM.NOT_LOGIN) {
     // 没登录，跳转到登录页
-    if (!currentUser || !currentUser.userRole) {
+    if (
+      !currentUser ||
+      !currentUser.userRole ||
+      currentUser.userRole === ACCESS_ENUM.NOT_LOGIN
+    ) {
       next(`/user/login?redirect=${to.fullPath}`);
       return;
     }
